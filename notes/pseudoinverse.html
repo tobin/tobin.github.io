@@ -110,12 +110,13 @@
 
     I found it instructive to try calculating this pseudoinverse for
     various examples of \(A\) like \([1, 0]\) (underdetermined) or
-    \([1, 1, 1]^T\) (overdetermined).
-    </p>
+    \([1, 1, 1]^T\) (overdetermined). (The text of Stengel has some
+    good examples.)
+  </p>
 
   <p>
-    It turns out that it exists when \(A\) is over-determined, but not
-    when it's under-determined.
+    It turns out that the left pseudoinverse exists when \(A\) is
+    over-determined, but not when it's under-determined.
       
     What do we do in that case? Wikipedia says that at least one of
     the left and right pseudoinverses always exists. Does the right
@@ -123,15 +124,17 @@
   </p>
   
   <p>
-    In state estimation we are typically
-    interested in the <i>underdetermined</i> case, where we can
-    measure only an incomplete projection of the state on any given
+    In state estimation we are typically interested in
+    the <i>underdetermined</i> case, where we can measure only an
+    incomplete projection of the state on any given
     measurement. (Stengel derives the seeminly magical Kalman update
     equations a bit later on page 332.)
   </p>
 
   <hr/>
 
-  <p>I welcome your comments at  <a href="mailto:fricke@gmail.com">fricke@gmail.com</a>.</p>
+  <p>
+    I welcome your comments
+    at <a href="mailto:fricke@gmail.com">fricke@gmail.com</a>.</p>
 </body>
 </html>
