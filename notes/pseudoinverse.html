@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>MathJax example</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <style>
+    html {
+        font-family: sans-serif;
+        max-width: 7in;
+    }
+  </style>
+</head>
+<body>
+  <h1>Notes on the pseudoinverse</h1>
+  <p>2019-10-25 <a href="mailto:fricke@gmail.com">fricke@gmail.com</a></p>
+
+  <p>Reading: <a href="https://www.amazon.com/Optimal-Control-Estimation-Dover-Mathematics-ebook/dp/B00A3M0ZNW/">Optimal Control and Estimation</a> by Stengel, from page 299.</p>
+  
+  <p>
+    Suppose we have an equation like \(y = Ax\), where \(x\) and \(y\)
+    are column vectors, not necessarily of the same size, and \(A\) is
+    a matrix.  We want to solve for \(x\) in terms of \(y\).  If \(A\)
+    is invertible, then the answer is simply \(x=A^{-1}y\).
+  </p>
+
+  <p>
+    If \(A\) is not invertible -- perhaps because it represents a
+    system that is either over- or under-determined -- we might want
+    to solve the equation in the least squares sense.  I'm
+    particularly interested in this from the point of view of state
+    estimation: suppose our system has state \(x\) but we only observe
+    a projection \(y = A x\).
+    What's the <i>best</i> value of \(x\) given \(y\)? To do so we can
+    define the mean-squared-error and then use the usual techniques to
+    minimize it.
+  </p>
+  
+  <p>
+    \(J(x) = |y - Ax|^2\)
+  </p>
+
+  <p>
+    \(J(x) = \left(y - Ax\right)^T \left(y - Ax\right)\)
+  </p>
+
+  <p>
+    \(J(x) = y^T y - (Ax)^T y - y^T A x + (Ax)^T Ax \)
+  </p>
+  
+  <p>
+    \(J(x) = y^T y - (Ax)^T y - y^T A x + (Ax)^T Ax \)
+  </p>
+
+  <p>
+    \(J(x) = y^T y - x^T A^T y - y^T A x + x^T A^T Ax \)
+  </p>
+
+  <p>Each term in this sum is a scalar value, and therefore equal to
+    its own transpose - so we can transpose the term \( x^T A^T y\)
+    and find that it is equal to its neighbor:</p>
+
+  <p>
+    \(J(x) = y^T y - 2 y^T A x + x^T A^T Ax \)
+  </p>
+  
+  <p>
+    Now it is time to take the derivative of \(J(x)\) with respect to
+    the column vector \(x\). By setting this derivative to zero and
+    solving, we can find the extrema of \(J(x)\). To do this
+    completely mechanically, we would have to define, for example,
+    what it means to take the derivative of a row-vector with respect
+    to a column vector and so forth. I believe there are conventions
+    here, but in ignorance of them we will utilize a small trick: it
+    turns out that
+    the <a href="https://math.stackexchange.com/q/189434/2191">derivative
+    of the quadratic form</a> \(x^T Hx\) with respect to \(x\) is
+    \(x^T\left(H + H^T\right)\). So:
+  </p>
+
+  <p>
+    \({\partial J(x)}/{\partial x} = -2 y^T A + 2 x^T\left(A^T A\right)\)
+  </p>
+
+  <p>Setting the derivative to zero and solving, we find:</p>
+  <p>
+    \(y^T A = x^T A^T A\)
+  </p>
+
+  <p>
+    \(A y = A^T A x\)
+  </p>
+
+  <p>
+    Supposing the inverse  \(\left(A^T A\right)^{-1}\) exists:
+  </p>
+
+  <p>
+    \(x = \left(A^T A\right)^{-1} A^T y\)
+  </p>
+  
+  <p>
+    This quantity \(\left(A^T A\right)^{-1} A^T\) is the left
+    <a href="https://en.wikipedia.org/wiki/Moore–Penrose_inverse">pseudoinverse</a>
+    of \(A\).
+
+    I found it instructive to try calculating this pseudoinverse for
+    various examples of \(A\) like \([1, 0]\) (underdetermined) or
+    \([1, 1, 1]^T\) (overdetermined).
+
+    It turns out that it exists when \(A\) is over-determined, but not
+    when it's under-determined.
+      
+    What do we do in that case? (Wikipedia says that at least one of
+    the left and right pseudoinverses always exists. Does the right
+    pseudoinverse do us any good? In state estimation we are typically
+    interested in the <i>underdetermined</i> case, where we can
+    measure only an incomplete projection of the state on any given
+    measurement. (Stengel derives the seeminly magical Kalman update
+    equations a bit later on page 332.)
+  </p>
+</body>
+</html>
