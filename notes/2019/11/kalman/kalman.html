@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>2019-10-25 Notes on the pseudoinverse</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <style>
+    html {
+        font-family: sans-serif;
+        max-width: 7in;
+    }
+  </style>
+</head>
+<body>
+  <h1>A Simple Kalman Filter</h1>
+
+  <p>
+    Lately I've spent a lot of time reading derivations of the Kalman filter and
+    trying to understand the Kalman filter equations intuitively.  Here in this note,
+    I will apply the Kalman equations to a simple system.
+  </p>
+
+  <p>
+    The Kalman filter tracks both the estimated state of a dynamical
+    system and its certainty; it does this by assuming that our state
+    of knowledge is characterized by a mean value (x) and a covariance
+    matrix (P).
+  </p>
+
+  <h2>Dynamical systems</h2>
+  <p>
+    The (discrete time) dynamical system is described by two equations: one
+    describing how the state evolves from one time step to the next, and the
+    other describing how observable measurements of the system are made.
+  </p>
+
+  <p>
+    \(x' = F x + B u \)<br/>
+    \(z  = H x\)
+  </p>
+
+  <p>Here x' is the state vector at the next time step, and x is the
+    state vector at the current time step. The vector u contains "control
+    inputs," and the matrix H describes how our measurement z is formed
+    from the state.
+  </p>
+
+  <h2>The first step: Propagation.</h2>
+  
+  <p>The filter proceeds in two steps. One step is to propagate the
+    estimate from a prior time step to the next time step. The
+    propagation equations are:
+  </p>
+  
+  <p>
+    \( \hat x \leftarrow F \hat x \) <br/>
+    \( P \leftarrow F P F^T + Q \)
+  </p>
+
+  <p>Here I use the "arrow operator" to indicate that a quantity is
+    being <i>updated</i>, rather than using an equals sign (which
+    would indicate an algebraic relationship). Traditionally, all of
+    the quantities here would be festooned with subscripts indicating
+    which timestep they correspond to, what knowledge has been
+    incorporated here, etc.
+  </p>
+
+  <h2>The second step: Update.</h2>
+  
+  <p>In the second step, we update our estimate to take into account
+    any observations that we've made. Using the current estimate, we can
+    predict the outcome of measurements.  The difference between the
+    expected measurement and the actual measurement is the <i>innovation</i>:
+  </p>
+
+  <p>
+    \(y = z - H \hat x\)
+  </p>
+  <p>
+    where y is the innovation, z is the measurement, \(\hat x\) is the
+    state estimate, and \(H \hat x\) is the expected outcome of the measurement.
+  </p>
+
+  <p>The innovation itself is a random variable with an associated covariance, S.
+    Some of this covariance comes from the uncertainty of the measurement, and
+    some comes from the uncertainty in the state estimate \(\hat x\). The innovation
+    covariange is:
+  </p>
+  <p>\(S = R + H P H^T\)</p>
+
+  <p>where R is the covariance matrix of the measurement z, and P is the covariance
+    matrix of the estimate \(\hat x\).
+  </p>
+  
+  <p>Now comes the magic. The <i>optimal Kalman gain</i> is:    
+  </p>
+
+  <p>\(K = P H^T S^{-1}\)</p>
+
+  <p>With the optimal Kalman gain, we can now perform the <i>update step</i>:</p>
+
+  <p>
+    \(x \leftarrow x + K y\)<br/>
+    \(P \leftarrow \left(I - K H\right) P\)
+  </p>
+
+  <p>Having performed the update, the new knowledge given by the measurement has now
+    been incorporated into the estimate.
+  </p>
+
+  <h1>Examples</h1>
+
+  <p>The equations defining the Kalman filter have a tendency to appear overwhelming
+    at first glance. Fortunately, it turns out that they are easy to apply, and a
+    the familiarity provided by a concrete example makes the whole thing a lot less daunting.
+  </p>
+  
+  <h2>Particle moving with constant velocity</h2>
+  <p>
+    To begin with a concrete example, consider a particle moving at a
+    constant, but unknown velocity. The state vector consists of the
+    position and velocity, and the dynamical system can be written:
+  </p>
+
+  <h3>Dynamics</h3>
+  <p>
+    \(
+    \begin{pmatrix}
+    x' \\
+    v'
+    \end{pmatrix}
+    =
+    \begin{pmatrix}
+    1 & dt \\
+    0 & 1
+    \end{pmatrix}
+    \begin{pmatrix}
+    x \\
+    v
+    \end{pmatrix}
+    \)
+  </p>
+
+  <p>In this case, we don't have any control input u, so we don't have
+    the control matrix B either. (You could say that it exists, but is an
+    empty matrix.)
+  </p>
+
+  <p>
+    In addition to the dynamics, we must specify some initial conditions for
+    our estimate. This is the "best guess" of the system state before we have
+    made any measurements; and we must quantify the certainty in this guess by
+    also giving an initial covariance matrix.
+  </p>
+
+  <p>
+    Supposing our only <i>a priori</i> knowledge of the system is that it's
+    within &pm;100 meters of the origin and moving at &pm;1 m/s, we might specify:
+  </p>
+  
+  <p>
+    \(\hat x_0 = \begin{pmatrix} 0 \\ 0 \end{pmatrix},
+    P_0 = \begin{pmatrix} (100\,\mathrm{m} )^2 & 0 \\ 0 & (1\,\mathrm{\frac{m}{s}})^2 \end{pmatrix}\)
+  </p>
+
+  <p>A diagonal covariance matrix here indicates that our uncertainty in position
+    is not correlated with the uncertainty in velocity.</p>
+
+  <h3>Measurement model</h3>
+  
+  <p>Having specified the dynamics, we now need to specify the measurement model.
+    Suppose we measure only the particle's position, but not it's velocity.
+    The measurement model is:
+  </p>
+
+  <p>
+    \( z =
+    \begin{pmatrix}
+    1 & 0
+    \end{pmatrix}
+    \begin{pmatrix}
+    x \\
+    v 
+    \end{pmatrix} \)
+  </p>
+
+  <p>
+    Intuitively, we expect to be able to estimate the particle's velocity given
+    measurements of its position at different points in time.
+  </p>
+  
+    
+  </body>
+  

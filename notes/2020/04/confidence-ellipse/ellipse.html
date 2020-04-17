@@ -1,0 +1,91 @@
+Covariance Matrix to Ellipse
+
+Lately I've been playing with Kalman filters, which are used to
+combine sensor measurements and knowledge of a system's dynamics to
+best estimate the state of that system -- for example, to combine noisy
+measurements of position, velocity, and acceleration to track the
+trajectory of a moving object. The Kalman filter doesn't just estimate
+the state of the system; it also estimates its own uncertainty about
+the state. Error bars, if you will. This uncertainty is expressed in
+the form of a covariance matrix.
+
+For my toy implementation, which estimates the position of a particle
+moving in a two-dimensional plane, I wanted to depict the covariance
+matrix as an ellipse, showing, say, the 90% confidence bounds of the
+estimate. But I realized I didn't know how to do this, off the top of
+my head. Hence this little blog. (It's already turning into one of
+those online recipes with too much backstory...)
+
+The covariance matrix. First, suppose we have two normally distributed
+random numbers x1 and x2 that are uncorrelated
+(i.e. independent). Then the covariance matrix of x1 and x2 is
+diagonal, with the variances of x1 and x2 along the diagonal:
+
+C = [{\sigma_1}^2, 0; 0, {\sigma_2}^2].
+
+Suppose we form new random variables, y1 and y2, by forming a linear
+combination of x1 and x2. Suppose y = Ax. Unlike x1 and x2, these new
+variables are correlated, and will have non-zero off-diagonal entries
+in the covariance matrix. We can compute the new covariance matrix
+using the following transformation law:
+
+C' = A C A^T
+
+We have to use the transformation matrix A <i>twice</i> when
+transforming the covariance matrix. One way to see this is to go back
+to the original definition of the covariance matrix. Another is to
+view the covariance matrix as a rank-2 tensor. (In fact, the covariance
+matrix is just like a moment-of-inertia tensor, computed from probability
+density instead of mass density. :mind-blown:)
+
+When we're presented with an arbitrary covariance matrix C', you could
+say that we want to find a transformation A that brings it back into
+the diagonal form, which we know what to do with.
+
+It turns out that matrix diagonalization is exactly what we want. When
+we diagonalize a matrix, we write it in the form:
+
+A = V D V^{-1}
+
+where V is an orthogonal matrix of eigenvectors and D is a diagonal
+matrix of eigenvalues. Notice that this has the same form as (previous
+equation), using the knowledge that the transpose of an orthogonal
+matrix is equal to its inverse. Shazam! We can simply diagonize the
+covariance matrix C' by finding its eigenvectors and eigenvalues,
+which will tell us how to draw the confidence ellipse. From the
+eigenvectors we can extract the orientation of the ellipse, and the
+eigenvalues tell us sigma_1 and sigma_2.
+
+The next question is how to scale \sigma_1 and \sigma_2 to get the
+size of the ellipse. This turned out to be a deeper subject than I
+anticipated and I will mostly just refer you to Wikipedia. For an
+arbitrary probability distribution, "Mahalanobis distance" turns out
+to be the relevant concept. For the special case of the multivariate
+normal distribution, the square of the Mahalanobis distance comes from
+the Chi-squared distribution, which, again, we can look up on
+Wikipedia. We use the inverse cumulative distribution function (cdf)
+of the Chi-squared distribution to translate a radius into the
+probability enclosed by that radius.
+
+In MATLAB, the inverse cdf of the Chi^2 distribution is available as
+the function chi2inv, although, infuriatingly, you need the expensive
+stats toolbox to get it. In Python, it's available as
+scipy.stats.chi2.ppf, where "ppf" -- "percent point function" -- is a
+funny name for the inverse of the cdf. Of course, all of that really
+only matters if you need full generality (arbitrary contours for an
+ellipse in an arbitrary number of dimensions). For the special case of
+two dimensions, the cdf of the \Chi^2 distribution has the simple
+form.
+
+Ok now. We're almost there. The parametric form of an equation for an
+ellipse with its principal axes aligned to the coordinate axes is
+(x,y)=(r_x \cos t, r_y \sin t), and the matrix of eigenvectors from
+above provides the needed change of coordinates to give the ellipse
+the desired orientation.
+
+
+
+
+
+
+
