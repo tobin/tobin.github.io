@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>2020-03-16</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <style>
+    html {
+        font-family: sans-serif;
+        max-width: 7in;
+    }
+  </style>
+</head>
+<body>
+
+  <p>
+    The "optimal control problem" is to find a trajectory that takes a system from one state to another in the "best" possible way,
+  where we get to define what we mean by "best." We might want to accomplish a task in the least time, or using the least fuel,
+  all without violating constraints on our actuators, for example. Curiously, solving the "optimal control problem" does not
+  provide us with a general control that can cope with arbitrary initial conditions and disturbances. The solution to the optimal
+  control problem provides a trajectory that can be used in a feed-forward sense to accomplish a goal, in the absence of model
+    uncertainties or disturbances.
+    </p>
+
+  <p>
+  I was very curious to see how the OCP can be solved in practice, and I'll demonstrate with an example here, where we find a
+  trajectory to swing-up and balance a pendulum in the inverted position. More specifically, I'll consider the "cart-pole", where
+  the pendulum is attached to a cart that can slide horizontally without friction. The control input is the force we apply to the
+  cart.
+  </p>
+
+  <p>
+  To start out, we need to model the dynamics of our system. Typically we want to end up with a function that gives us the derivative of
+  the state of the system given its current state (and possibly the  time, for time-dependent systems). Obtaining the dynamics of the
+  cart-pole system is itself an entertaining exercise.
+  </p>
+
+
+  <p>
+    We start by writing down the Lagrangian, which is the difference of the kinetic (T) and potential (V) energies of the system.
+  </p>
+
+  <p>
+  \(T = \frac{1}{2} m_1 {\dot q}_1^2 + \frac{1}{2} m_2 \left({{\dot q}_1}^2 + 2{\dot q}_1 {\dot q}_2 \cos q_2 + l^2 {{\dot q}_2}^2\right)\)
+  </p>
+
+  <p>
+  \(V = -m_2 g l \sin q_2\)
+  </p>
+
+  <p>
+    \(L = T - V\)
+  </p>
+  
+  <p>
+    Having written down the Lagrangian, it's time to "shut up and calculate," or "plug-and-chug" as my high school Algebra teacher
+    would have said. Plug the Lagrangian into the Euler-Lagrange equation, compute the various derivatives, and out pop the system's
+    equations of motion. That is to say, our work so far has been to look at the problem and translate it into some mathematical
+    expressions, from which the equations of motion may be obtained automatically.
+  </p>
+
+  <p>In conventional notation the E-L equations are written:</p>
+
+  <p>
+    \( \frac{\partial L}{\partial q_i} - \frac{d}{dt}\left( \frac{\partial L}{\partial {\dot q}_i}\right) = f_i \)
+  </p>
+
+  <p>By the way, if you find the Euler-Lagrange equations in the way that they are usually written hopelessly "punny,"
+    you're not alone. What's the problem? When evaluating \(\partial/\partial{\dot q}_i\) we have to <i>temporarily forget</i>
+    that q dot is the time derivative of q.
+    </p>
+
+  <p>If you haven't worked this out before, it's worth doing it by hand - using pen and paper - at least once. As a learning
+    exercise I'm going to try doing this with SymPy.</p>
+  
+</body>
+</html>
