@@ -1,88 +1,156 @@
-Covariance Matrix to Ellipse
-
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width">
+<title>2020-04-18 Covariance Matrix to Ellipse</title>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async
+        src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+</script>
+<style>
+  html {
+      font-family: sans-serif;
+      max-width: 7in;
+  }
+</style>
+</head>
+<body>
+  
+<h1>Covariance Matrix to Ellipse</h1>
+<p>2020-04-18</p>
+<p>
 Lately I've been playing with Kalman filters, which are used to
 combine sensor measurements and knowledge of a system's dynamics to
-best estimate the state of that system -- for example, to combine noisy
+best estimate the state of that system&mdash;for example, to combine noisy
 measurements of position, velocity, and acceleration to track the
 trajectory of a moving object. The Kalman filter doesn't just estimate
 the state of the system; it also estimates its own uncertainty about
 the state. Error bars, if you will. This uncertainty is expressed in
 the form of a covariance matrix.
-
+</p><p>
 For my toy implementation, which estimates the position of a particle
 moving in a two-dimensional plane, I wanted to depict the covariance
 matrix as an ellipse, showing, say, the 90% confidence bounds of the
 estimate. But I realized I didn't know how to do this, off the top of
 my head. Hence this little blog. (It's already turning into one of
 those online recipes with too much backstory...)
-
+</p><p>
 The covariance matrix. First, suppose we have two normally distributed
-random numbers x1 and x2 that are uncorrelated
-(i.e. independent). Then the covariance matrix of x1 and x2 is
-diagonal, with the variances of x1 and x2 along the diagonal:
-
-C = [{\sigma_1}^2, 0; 0, {\sigma_2}^2].
-
-Suppose we form new random variables, y1 and y2, by forming a linear
-combination of x1 and x2. Suppose y = Ax. Unlike x1 and x2, these new
+random numbers \(x_1\) and \(x_2\) that are uncorrelated
+(i.e. independent).  We treat \(x_1\) and \(x_2\) as components of a
+vector \(\mathbf x\). The covariance matrix of \(\mathbf x\) is
+diagonal, with the variances of \(x_1\) and \(x_2\) along the diagonal:
+</p><p>
+    \(C = \begin{bmatrix}
+    {\sigma_1}^2 & 0\\
+    0            & {\sigma_2}^2
+    \end{bmatrix}\)
+</p><p>
+Suppose we form new random variables, \(y_1\) and \(y_2\), by forming a linear
+combination of \(x_1\) and \(x_2\). Suppose \(\mathbf{y} = A\mathbf{x}\).
+Unlike \(x_1\) and \(x_2\), these new
 variables are correlated, and will have non-zero off-diagonal entries
-in the covariance matrix. We can compute the new covariance matrix
+in the covariance matrix. We can compute the new covariance matrix \(C'\)
 using the following transformation law:
-
-C' = A C A^T
-
+</p><p>
+\(C' = A C A^T\)
+</p><p>
 We have to use the transformation matrix A <i>twice</i> when
 transforming the covariance matrix. One way to see this is to go back
 to the original definition of the covariance matrix. Another is to
 view the covariance matrix as a rank-2 tensor. (In fact, the covariance
 matrix is just like a moment-of-inertia tensor, computed from probability
 density instead of mass density. :mind-blown:)
+</p><p>
 
-When we're presented with an arbitrary covariance matrix C', you could
-say that we want to find a transformation A that brings it back into
-the diagonal form, which we know what to do with.
-
-It turns out that matrix diagonalization is exactly what we want. When
-we diagonalize a matrix, we write it in the form:
-
-A = V D V^{-1}
-
-where V is an orthogonal matrix of eigenvectors and D is a diagonal
-matrix of eigenvalues. Notice that this has the same form as (previous
-equation), using the knowledge that the transpose of an orthogonal
-matrix is equal to its inverse. Shazam! We can simply diagonize the
-covariance matrix C' by finding its eigenvectors and eigenvalues,
-which will tell us how to draw the confidence ellipse. From the
-eigenvectors we can extract the orientation of the ellipse, and the
-eigenvalues tell us sigma_1 and sigma_2.
-
-The next question is how to scale \sigma_1 and \sigma_2 to get the
+Here's my idea. I know how to draw the confidence ellipse for a diagonal covariance matrix.
+If I'm presented with an arbitrary covariance matrix \(C'\), I can try to 
+find a transformation \(A\) that brings it back into
+the diagonal form, which I know what to do with. How to do this? Diagonalizing
+the matrix \(C'\) practically suggests itself. Diagonalizing \(C'\) means writing it
+like this:
+</p><p>
+\(C' = V D V^{-1}\)
+</p><p>
+where \(V\) is an orthogonal matrix of eigenvectors and \(D\) is a diagonal
+matrix of eigenvalues. This looks perfect, especially since we know that,
+because the covariance matrix is symmetric, its matrix of eigenvectors is
+orthogonal and therfore \(V^{-1} = V^T\). Moreover, an orthogonal matrix is a
+rotation - exactly the rotation we need to rotate the ellipse, from one whose
+axes are aligned with the coordinate axes, to the desired confidence ellipse.
+</p><p>
+Given \(A C A^T = V D V^T\), where \(C\) and \(D\) are both diagonal, and \(V\) is
+orthogonal, can we conclude that \(A = V\) and \(C = D\)? No, not quite. We put
+no requirements on the original transformation \(A\) but the one we recovered (\(V\))
+is orthogonal. So they are not in general the same. But does that matter?
+</p>
+<p>We have
+found <i>a</i> transformation that diagonalizes the covariance matrix. Do we care
+that it's not the (hypothetical!) "original" one? No, we don't. Going back to our original problem,
+we are given a non-diagonal covariance matrix \(C'\) and we want to find <i>some transformation</i>
+\(C = \tilde A C' {\tilde A}\,^T\) that produces a diagonal one. I was surprised that
+this does not have a unique solution; but we can say that it has a canonical one. This
+also frees us from having to consider non-square transformations \(A\).
+</p>
+<p>
+The recipe is taking shape: We can diagonize the
+covariance matrix \(C'\) by finding its eigenvectors (which form the matrix \(V\))
+and eigenvalues (which form the diagonal of matrix \(D\)),
+which in turn tell us how to draw the confidence ellipse. From the
+eigenvectors we extract the orientation of the ellipse, and the
+from the eigenvalues we get \(\sigma_1\) and \(\sigma_2\).
+</p><p>
+The next question is how to scale \(\sigma_1\) and \(\sigma_2\) to get the
 size of the ellipse. This turned out to be a deeper subject than I
 anticipated and I will mostly just refer you to Wikipedia. For an
-arbitrary probability distribution, "Mahalanobis distance" turns out
+arbitrary probability distribution,
+"Mahalanobis distance" turns out
 to be the relevant concept. For the special case of the multivariate
 normal distribution, the square of the Mahalanobis distance comes from
-the Chi-squared distribution, which, again, we can look up on
+the Chi-squared (\(\chi^2\)) distribution, which, again, we can look up on
 Wikipedia. We use the inverse cumulative distribution function (cdf)
 of the Chi-squared distribution to translate a radius into the
 probability enclosed by that radius.
-
-In MATLAB, the inverse cdf of the Chi^2 distribution is available as
-the function chi2inv, although, infuriatingly, you need the expensive
+</p><p>
+In MATLAB, the inverse cdf of the \(\chi^2\) distribution is available as
+the function <a href="https://www.mathworks.com/help/stats/chi2inv.html"><code>chi2inv</code></a>,
+although, infuriatingly, you need the expensive
 stats toolbox to get it. In Python, it's available as
-scipy.stats.chi2.ppf, where "ppf" -- "percent point function" -- is a
+<a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2.html"><code>scipy.stats.chi2.ppf</code></a>, where "ppf"&mdash;"percent point function"&mdash;is a
 funny name for the inverse of the cdf. Of course, all of that really
 only matters if you need full generality (arbitrary contours for an
 ellipse in an arbitrary number of dimensions). For the special case of
-two dimensions, the cdf of the \Chi^2 distribution has the simple
-form.
-
+two dimensions&mdash;and this is the main case we care about 
+since we're drawing on two-dimensional paper&mdash;the cdf
+of the \(\chi^2\) distribution has a simple
+form. [TODO: Put that special form here]
+</p>
+<p>[TODO: Put a table of chi2inv values here]</p>
+<p>
 Ok now. We're almost there. The parametric form of an equation for an
 ellipse with its principal axes aligned to the coordinate axes is
-(x,y)=(r_x \cos t, r_y \sin t), and the matrix of eigenvectors from
+\((x,y)=(r_x \cos t, r_y \sin t)\), and the matrix of eigenvectors from
 above provides the needed change of coordinates to give the ellipse
-the desired orientation.
-
+the desired orientation. You can literally just multiply that \((x,y)\)
+vector by the matrix of eigenvectors \(V\).
+</p>
+<h2>TL;DR: The Recipe</h2><p>
+How to draw a confidence ellipse corresponding to the covariance matrix \(C\):
+</p>
+<ol>
+  <li><p>Diagonalize C by finding the eigenvectors V and eigenvalues \(\{{\sigma_i}^2\}\).</p></li>
+  <li><p>Use the Chi-squared distribution to look up how many sigma correspond to the
+      confidence contour of interest. [TODO: Just give the value for the 90% ci in 2
+  dimensions.]</p></li>
+   <li><p>Draw an ellipse using the following expression. [TODO: Flesh out the expression]</p></li>
+</ol>
+<p>Check out the attached
+  <a href="https://colab.research.google.com/drive/1_e2krTcXJML7E_k1OA7M2EM57Q3R5z42">ipython notebook</a> for a working example.</p>
+<hr/>
+<p>I welcome your comments at <a href="mailto:fricke@gmail.com">fricke@gmail.com</a>.</p>
+</body>
+</html>
 
 
 
